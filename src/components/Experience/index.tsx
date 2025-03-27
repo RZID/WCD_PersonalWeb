@@ -20,10 +20,21 @@ const Experience = ({ name, fields }: ExperienceProps) => {
       )}
     >
       <div className={classNames("flex", "flex-1", "gap-y-4", "flex-col")}>
-        <h1 className={classNames("text-6xl", "text-slate-950")}>{name}</h1>
-        <p className={classNames("text-gray-700")}>{fields.join(" - ")}</p>
+        <h1 className={classNames("text-4xl", "xl:text-6xl", "text-slate-950")}>
+          {name}
+        </h1>
+        <p
+          className={classNames(
+            "text-xs",
+            "md:text-sm",
+            "lg:text-base",
+            "text-gray-700"
+          )}
+        >
+          {fields.join(" - ")}
+        </p>
       </div>
-      <Button className={classNames("text-2xl")}>
+      <Button className={classNames("text-xl", "xl:text-2xl")}>
         <FiArrowUpRight />
       </Button>
     </div>

@@ -3,9 +3,11 @@ import classNames from "classnames";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
+// Components
+import RunningComponent from "../../components/RunningComponent";
+
 // Assets
 import Avatar from "../../assets/avatar.png";
-import RunningComponent from "../../components/RunningComponent";
 
 const HomeBanner = () => {
   // Refs
@@ -25,8 +27,8 @@ const HomeBanner = () => {
     <div
       className={classNames(
         "flex",
-        "flex-col",
         "relative",
+        "flex-col",
         "h-[700px]",
         "justify-end",
         "bg-slate-300",
@@ -84,7 +86,7 @@ const HomeBanner = () => {
               )}
               style={{ visibility: expanded ? "visible" : "hidden" }}
             >
-              Hi, I'm Ramadhanu
+              Hi, I'm {import.meta.env.VITE_APP_OWNER_NAME}
             </motion.p>
           </motion.div>
         </div>
@@ -112,6 +114,7 @@ const HomeBanner = () => {
           "w-full",
           "h-full",
           "absolute",
+          "object-bottom",
           "object-contain"
         )}
       />

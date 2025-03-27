@@ -7,12 +7,14 @@ import "./styles/fonts.css";
 
 // Pages
 import LandingPage from "./pages/home";
+import ContactPage from "./pages/contact";
 
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/contact" element={<ContactPage />} />
       </Routes>
     </BrowserRouter>
   );
