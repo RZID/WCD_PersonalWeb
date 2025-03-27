@@ -1,4 +1,7 @@
+// Deps
 import classNames from "classnames";
+
+// Types
 import AboutLayoutProps from "./types";
 
 const AboutLayout = ({ title, children }: AboutLayoutProps) => {
@@ -6,11 +9,14 @@ const AboutLayout = ({ title, children }: AboutLayoutProps) => {
     <div
       className={classNames(
         "flex",
+        "px-10",
         "gap-x-5",
         "mx-auto",
-        "flex-row",
+        "gap-y-5",
+        "flex-col",
         "lg:px-20",
-        "container"
+        "container",
+        "lg:flex-row"
       )}
     >
       <h1 className={classNames("flex-1", "font-medium", "text-4xl")}>

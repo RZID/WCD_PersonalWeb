@@ -1,20 +1,43 @@
+// Deps
 import classNames from "classnames";
+
+// Types
 import ButtonProps from "./types";
 
-const Button = ({ children, ...otherButtonProps }: ButtonProps) => {
+const Button = ({
+  children,
+  variant = "outline-dark",
+  shape = "circle",
+  ...otherButtonProps
+}: ButtonProps) => {
   return (
     <button
       {...otherButtonProps}
       className={classNames(
-        "p-5",
         "border",
-        "rounded-full",
         "transition-all",
         "cursor-pointer",
-        "text-gray-700",
-        "border-gray-700",
-        "hover:bg-gray-900",
-        "hover:text-slate-100",
+        shape === "square"
+          ? classNames("py-3", "px-4", "rounded-lg")
+          : shape === "oval"
+          ? classNames("py-6", "px-12", "rounded-full")
+          : classNames("p-3", "xl:p-5", "rounded-full"),
+        variant === "light"
+          ? classNames("bg-white", "text-gray-900", "border-white")
+          : variant === "dark"
+          ? classNames(
+              "bg-gray-900",
+              "text-slate-100",
+              "border-gray-700",
+              "hover:text-slate-100"
+            )
+          : classNames(
+              "text-gray-700",
+              "border-gray-700",
+              "hover:bg-gray-900",
+              "hover:text-slate-100"
+            ),
+
         otherButtonProps.className
       )}
     >
