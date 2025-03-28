@@ -40,10 +40,10 @@ jobs:
           name: Deploy to Server
           command: |
             ssh -o StrictHostKeyChecking=no rzidinc@103.196.153.218 "
-              cd /var/www/wcd_cakrawala_4 &&
+              cd /home/rzidinc/Projects/sites/wcd_cakrawala_4 &&
               rm -rf dist &&
               mkdir dist"
-            scp -r dist/* rzidinc@103.196.153.218:/var/www/wcd_cakrawala_4/dist
+            scp -r dist/* rzidinc@103.196.153.218:/home/rzidinc/Projects/sites/wcd_cakrawala_4/dist
       - run:
           name: Restart Server
           command: ssh rzidinc@103.196.153.218 "
