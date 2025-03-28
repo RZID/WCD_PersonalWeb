@@ -44,10 +44,6 @@ jobs:
               rm -rf dist &&
               mkdir dist"
             scp -r dist/* rzidinc@103.196.153.218:/home/rzidinc/Projects/sites/wcd_cakrawala_4/dist
-      - run:
-          name: Restart Server
-          command: ssh rzidinc@103.196.153.218 "
-            pm2 restart all || systemctl restart nginx || systemctl restart apache2"
 
 workflows:
   build_and_deploy:
