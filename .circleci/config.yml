@@ -3,7 +3,7 @@ version: 2.1
 executors:
   node-executor:
     docker:
-      - image: cimg/node:20.8.1 # Use Node.js 20.x for Vite
+      - image: cimg/node:22.14.0
 
 jobs:
   build:
