@@ -54,6 +54,7 @@ const HomeBanner = () => {
             transition={{ duration: 0.5, ease: "easeInOut" }}
             onHoverStart={() => setExpanded(true)}
             onHoverEnd={() => setExpanded(false)}
+            onClick={() => setExpanded(!expanded)}
           >
             <motion.h1
               className={classNames("text-5xl", "select-none")}
