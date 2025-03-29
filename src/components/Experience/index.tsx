@@ -20,7 +20,16 @@ const Experience = ({ name, fields }: ExperienceProps) => {
       )}
     >
       <div className={classNames("flex", "flex-1", "gap-y-4", "flex-col")}>
-        <h1 className={classNames("text-4xl", "xl:text-6xl", "text-slate-950")}>
+        <h1
+          className={classNames(
+            "text-xl",
+            "sm:text-2xl",
+            "md:text-3xl",
+            "lg:text-4xl",
+            "xl:text-6xl",
+            "text-slate-950"
+          )}
+        >
           {name}
         </h1>
         <p

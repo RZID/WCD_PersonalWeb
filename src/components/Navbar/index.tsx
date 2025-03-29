@@ -96,7 +96,7 @@ const Navbar = () => {
           "flex",
           "px-4",
           "mx-auto",
-          "md:px-0",
+          "lg:px-0",
           "container",
           "items-center",
           "justify-between"
@@ -251,7 +251,9 @@ const Navbar = () => {
             "flex-1",
             "gap-y-7",
             "flex-col",
-            "text-4xl",
+            "text-2xl",
+            "md:text-3xl",
+            "lg:text-4xl",
             "font-medium",
             "justify-center"
           )}
@@ -306,7 +308,9 @@ const Navbar = () => {
             delay: menuOpen ? 0.3 : 0, // Slight delay after the menu opens
           }}
         >
-          <div className={classNames("flex", "flex-row", "gap-x-8")}>
+          <div
+            className={classNames("flex", "flex-row", "gap-x-8", "flex-wrap")}
+          >
             {socials.map(({ name, url }) =>
               url ? (
                 <h3

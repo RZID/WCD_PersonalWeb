@@ -122,7 +122,8 @@ const ContactPage = () => {
                     key={`contact-${i}`}
                     whileHover={{ scale: 1.05 }}
                     className={classNames(
-                      "text-2xl",
+                      "text-xl",
+                      "lg:text-2xl",
                       "cursor-pointer",
                       "hover:underline",
                       "transition-transform"
@@ -145,7 +146,8 @@ const ContactPage = () => {
                     key={`social-${i}`}
                     whileHover={{ scale: 1.05 }}
                     className={classNames(
-                      "text-2xl",
+                      "text-xl",
+                      "lg:text-2xl",
                       "cursor-pointer",
                       "hover:underline",
                       "transition-transform"
@@ -167,7 +169,15 @@ const ContactPage = () => {
           variants={fadeInAnimation}
           className={classNames("flex-1", "flex", "flex-col", "gap-y-9")}
         >
-          <h1 className={classNames("text-5xl", "font-medium")}>
+          <h1
+            className={classNames(
+              "text-2xl",
+              "md:text-3xl",
+              "lg:text-4xl",
+              "xl:text-5xl",
+              "font-medium"
+            )}
+          >
             Let’s build something cool together
           </h1>
 

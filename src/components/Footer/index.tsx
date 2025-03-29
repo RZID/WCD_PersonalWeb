@@ -93,7 +93,7 @@ const Footer = ({ simple }: FooterProps) => {
             variant="light"
             onClick={() => navigate("/contact")}
           >
-            <h1 className={classNames("text-lg", "font-medium")}>
+            <h1 className={classNames("text", "font-medium", "lg:text-lg")}>
               Get in touch
             </h1>
           </Button>
@@ -113,13 +113,25 @@ const Footer = ({ simple }: FooterProps) => {
           Build with 💖 by {import.meta.env.VITE_APP_OWNER_NAME}
         </h3>
 
-        <div className={classNames("flex", "gap-x-8")}>
+        <div
+          className={classNames(
+            "flex",
+            "gap-x-8",
+            "gap-y-4",
+            "flex-wrap",
+            "justify-center"
+          )}
+        >
           {socials.map(({ name, url }) =>
             url ? (
               <h3
                 key={name}
                 onClick={() => window.open(url, "_blank")}
-                className={classNames("select-none", "cursor-pointer")}
+                className={classNames(
+                  "select-none",
+                  "text-center",
+                  "cursor-pointer"
+                )}
               >
                 {name}
               </h3>
