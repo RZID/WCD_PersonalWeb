@@ -22,8 +22,10 @@ const Input = ({
         className={classNames(
           "py-3",
           "w-full",
+          "text-lg",
           "border-b",
-          "text-2xl",
+          "md:text-xl",
+          "lg:text-2xl",
           "placeholder:text-gray-400"
         )}
       />
@@ -35,8 +37,10 @@ const Input = ({
         className={classNames(
           "py-3",
           "w-full",
+          "text-lg",
           "border-b",
-          "text-2xl",
+          "md:text-xl",
+          "lg:text-2xl",
           "placeholder:text-gray-400"
         )}
       />
