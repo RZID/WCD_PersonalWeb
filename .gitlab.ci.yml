@@ -1,0 +1,44 @@
+stages:
+  - build
+  - deploy
+
+# cache node modules for speed
+cache:
+  key: "$CI_PROJECT_PATH-$CI_COMMIT_REF_SLUG"
+  paths:
+    - node_modules/
+
+variables:
+  NODE_ENV: production
+
+before_script:
+  - apt-get update -y && apt-get install -y openssh-client git
+  - mkdir -p ~/.ssh
+  - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+  - chmod 600 ~/.ssh/id_rsa
+  - ssh-keyscan github.com >> ~/.ssh/known_hosts || true
+  - ssh-keyscan 192.168.110.3 >> ~/.ssh/known_hosts || true
+
+build:
+  stage: build
+  image: cimg/node:22.14.0
+  script:
+    - git clone --depth 1 git@github.com:RZID/WCD_PersonalWeb.git repo || (git clone --depth 1 https://github.com/RZID/WCD_PersonalWeb.git repo)
+    - cd repo
+    - yarn install --frozen-lockfile
+    - yarn build
+  artifacts:
+    paths:
+      - repo/dist
+    expire_in: 1 hour
+
+deploy:
+  stage: deploy
+  image: cimg/node:22.14.0
+  dependencies:
+    - build
+  script:
+    - echo "Deploying to server..."
+    - scp -r repo/dist/* rzidinc@192.168.110.3:/home/rzidinc/Projects/sites/wcd_cakrawala_4/dist
+  only:
+    - main
