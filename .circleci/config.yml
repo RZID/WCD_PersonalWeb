@@ -41,7 +41,7 @@ jobs:
       - run:
           name: Deploy to Server
           command: |
-            ssh -o StrictHostKeyChecking=no rzidinc@154.26.134.92 "
+            ssh -o StrictHostKeyChecking=no web@192.168.110.3 "
               cd /home/rzidinc/Projects/sites/wcd_cakrawala_4 &&
               rm -rf dist &&
               mkdir dist"
