@@ -2,7 +2,11 @@ stages:
   - build
   - deploy
 
-# cache node modules for speed
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
+    - if: '$CI_COMMIT_REF_NAME == "main"'
+
 cache:
   key: "$CI_PROJECT_PATH-$CI_COMMIT_REF_SLUG"
   paths:
@@ -31,6 +35,8 @@ build:
     paths:
       - repo/dist
     expire_in: 1 hour
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
 
 deploy:
   stage: deploy
@@ -40,5 +46,5 @@ deploy:
   script:
     - echo "Deploying to server..."
     - scp -r repo/dist/* rzidinc@192.168.110.3:/home/rzidinc/Projects/sites/wcd_cakrawala_4/dist
-  only:
-    - main
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "trigger"'
