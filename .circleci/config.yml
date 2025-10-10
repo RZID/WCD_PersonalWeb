@@ -2,8 +2,10 @@ version: 2.1
 
 executors:
   node-executor:
-    docker:
-      - image: cimg/node:22.14.0
+    machine: true
+    resource_class: rzid/home-runner
+    environment:
+      NODE_ENV: production
 
 jobs:
   build:
@@ -32,10 +34,10 @@ jobs:
     executor: node-executor
     steps:
       - attach_workspace:
-          at: /home/circleci/project
+          at: .
       - add_ssh_keys:
           fingerprints:
-            - "SHA256:VBkuFAQYoOSf8sM0dMoLUtXxaYZ5uyQ+Or0haE5R5uk" # Replace with actual fingerprint
+            - "SHA256:VBkuFAQYoOSf8sM0dMoLUtXxaYZ5uyQ+Or0haE5R5uk"
       - run:
           name: Deploy to Server
           command: |
@@ -58,4 +60,5 @@ workflows:
             - build
           filters:
             branches:
-              only: main # Deploy only if merged to `main`
+              only:
+                - main
