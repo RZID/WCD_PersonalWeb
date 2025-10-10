@@ -3,7 +3,7 @@ version: 2.1
 executors:
   node-executor:
     machine: true
-    resource_class: rzid/home-runner
+    resource_class: rzidinc/home-runner
     environment:
       NODE_ENV: production
 
