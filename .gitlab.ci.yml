@@ -1,0 +1,42 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  NODE_ENV: production
+
+# =====================
+# Build job
+# =====================
+build:
+  stage: build
+  tags:
+    - node
+  script:
+    - echo "Installing dependencies..."
+    - yarn install
+    - echo "Building project..."
+    - yarn build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 hour
+
+# =====================
+# Deploy job
+# =====================
+deploy:
+  stage: deploy
+  tags:
+    - node
+  dependencies:
+    - build
+  script:
+    - echo "Deploying to server..."
+    - ssh -o StrictHostKeyChecking=no web@192.168.110.3 "
+        cd /home/rzidinc/Projects/sites/wcd_cakrawala_4 &&
+        rm -rf dist &&
+        mkdir dist"
+    - scp -r dist/* web@192.168.110.3:/home/rzidinc/Projects/sites/wcd_cakrawala_4/dist
+  only:
+    - main
