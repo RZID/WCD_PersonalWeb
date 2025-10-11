@@ -1,20 +1,24 @@
 stages:
+  - sync
   - build
   - deploy
 
 variables:
   NODE_ENV: production
-  CACHE_KEY: ${CI_COMMIT_REF_SLUG}
 
-cache:
-  key: ${CACHE_KEY}
-  paths:
-    - node_modules/
+sync:
+  stage: sync
+  script:
+    - git config --global user.name "GitHub Mirror"
+    - git config --global user.email "$GITHUB_EMAIL"
+    - git remote add github https://$GITHUB_TOKEN@github.com/RZID/PersonalWeb.git || true
+    - git fetch github
+    - git reset --hard github/main
+  only:
+    - triggers
 
 build:
   stage: build
-  tags:
-    - node
   script:
     - yarn install
     - yarn build
@@ -27,10 +31,6 @@ build:
 
 deploy:
   stage: deploy
-  tags:
-    - node
-  dependencies:
-    - build
   script:
     - ssh -o StrictHostKeyChecking=no web@192.168.110.3 "
         cd /home/rzidinc/Projects/sites/wcd_cakrawala_4 &&

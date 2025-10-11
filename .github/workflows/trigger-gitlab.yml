@@ -1,4 +1,4 @@
-name: Trigger GitLab CI
+name: Trigger GitLab Pipeline
 
 on:
   push:
@@ -16,4 +16,4 @@ jobs:
           curl -X POST \
             -F token=$GITLAB_TOKEN \
             -F ref=main \
-            https://gitlab.rzidinc.com/api/v4/projects/2/trigger/pipeline
+            https://gitlab.rzidinc.com/api/v4/projects/1/trigger/pipeline
