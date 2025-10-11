@@ -9,8 +9,9 @@ variables:
 sync:
   stage: sync
   script:
+    - echo "Syncing repository from GitHub..."
     - git config --global user.name "GitHub Mirror"
-    - git config --global user.email "$GITHUB_EMAIL"
+    - git config --global user.email "github-mirror@example.com"
     - git remote add github https://$GITHUB_TOKEN@github.com/RZID/PersonalWeb.git || true
     - git fetch github
     - git reset --hard github/main
@@ -20,7 +21,9 @@ sync:
 build:
   stage: build
   script:
+    - echo "Installing dependencies..."
     - yarn install
+    - echo "Building project..."
     - yarn build
   artifacts:
     paths:
@@ -32,6 +35,7 @@ build:
 deploy:
   stage: deploy
   script:
+    - echo "Deploying to server..."
     - ssh -o StrictHostKeyChecking=no web@192.168.110.3 "
         cd /home/rzidinc/Projects/sites/wcd_cakrawala_4 &&
         rm -rf dist &&
