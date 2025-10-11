@@ -4,27 +4,27 @@ stages:
 
 variables:
   NODE_ENV: production
+  CACHE_KEY: ${CI_COMMIT_REF_SLUG}
 
-# =====================
-# Build job
-# =====================
+cache:
+  key: ${CACHE_KEY}
+  paths:
+    - node_modules/
+
 build:
   stage: build
   tags:
     - node
   script:
-    - echo "Installing dependencies..."
     - yarn install
-    - echo "Building project..."
     - yarn build
   artifacts:
     paths:
       - dist/
-    expire_in: 1 hour
+    expire_in: 1h
+  only:
+    - main
 
-# =====================
-# Deploy job
-# =====================
 deploy:
   stage: deploy
   tags:
@@ -32,7 +32,6 @@ deploy:
   dependencies:
     - build
   script:
-    - echo "Deploying to server..."
     - ssh -o StrictHostKeyChecking=no web@192.168.110.3 "
         cd /home/rzidinc/Projects/sites/wcd_cakrawala_4 &&
         rm -rf dist &&
