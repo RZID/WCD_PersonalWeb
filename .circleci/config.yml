@@ -4,25 +4,31 @@ executors:
   node-executor:
     docker:
       - image: cimg/node:22.14.0
+    working_directory: /home/circleci/project
 
 jobs:
   build:
     executor: node-executor
     steps:
       - checkout
+
       - restore_cache:
           keys:
-            - v1-dependencies-{{ checksum "package-lock.json" }}
+            - v1-yarn-deps-{{ checksum "yarn.lock" }}
+
       - run:
           name: Install dependencies
-          command: yarn install
+          command: yarn install --frozen-lockfile
+
       - save_cache:
-          key: v1-dependencies-{{ checksum "package-lock.json" }}
+          key: v1-yarn-deps-{{ checksum "yarn.lock" }}
           paths:
-            - node_modules
+            - ~/.cache/yarn
+
       - run:
-          name: Build Project
+          name: Build project
           command: yarn build
+
       - persist_to_workspace:
           root: .
           paths:
@@ -33,17 +39,33 @@ jobs:
     steps:
       - attach_workspace:
           at: /home/circleci/project
+
       - add_ssh_keys:
           fingerprints:
             - "SHA256:W626Um9048Sg67sSH//pI9wCwngSjBLf/34HL/EiOtI"
       - run:
           name: Deploy to Server
           command: |
-            ssh -o StrictHostKeyChecking=no web@159.223.54.215 "
-              cd /home/rzidinc/docker/web/html/wcd/personal_web &&
-              rm -rf ./* &&
-              rm -rf ./.*"
-            scp -r dist/* web@159.223.54.215:/home/rzidinc/docker/web/html/wcd/personal_web
+            set -e
+
+            echo "📦 Deploying build to server..."
+
+            ssh -o StrictHostKeyChecking=no -p 2242 web@159.223.54.215 \<< 'EOF'
+              cd /home/rzidinc/docker/web/html/wcd/personal_web
+
+              find . -mindepth 1 -maxdepth 1 \
+                ! -name '.env' \
+                ! -name '.gitkeep' \
+                -exec rm -rf {} +
+
+              echo "🧹 Old files cleaned"
+            EOF
+
+            scp -P 2242 -r /home/circleci/project/dist/* \
+              web@159.223.54.215:/home/rzidinc/docker/web/html/wcd/personal_web
+
+            echo "🚀 Deploy finished successfully"
+
 workflows:
   build_and_deploy:
     jobs:
@@ -52,9 +74,11 @@ workflows:
             branches:
               only:
                 - main
+
       - deploy:
           requires:
             - build
           filters:
             branches:
-              only: main # Deploy only if merged to `main`
+              only:
+                - main
