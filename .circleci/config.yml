@@ -109,7 +109,7 @@ jobs:
             EOF
 
             echo "📤 Uploading build files..."
-            scp $SSH_OPTS -r dist/* \
+            scp -v $SSH_OPTS -r dist/* \
               $SERVER_USER@$SERVER_IP:"$TARGET_DIR/"
 
             echo "⚙️ Reloading Nginx (Docker)..."
