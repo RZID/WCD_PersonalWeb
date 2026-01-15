@@ -50,7 +50,7 @@ jobs:
 
             echo "📦 Deploying build to server..."
 
-            ssh -o StrictHostKeyChecking=no -p 2242 web@159.223.54.215 << 'EOF'
+            ssh -o StrictHostKeyChecking=no -p 2242 web@159.223.54.215 \<< 'EOF'
               cd /home/rzidinc/docker/web/html/wcd/personal_web
 
               find . -mindepth 1 -maxdepth 1 \
