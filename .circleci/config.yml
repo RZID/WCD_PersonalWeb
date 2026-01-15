@@ -35,16 +35,15 @@ jobs:
           at: /home/circleci/project
       - add_ssh_keys:
           fingerprints:
-            - "SHA256:VBkuFAQYoOSf8sM0dMoLUtXxaYZ5uyQ+Or0haE5R5uk" # Replace with actual fingerprint
+            - "SHA256:W626Um9048Sg67sSH//pI9wCwngSjBLf/34HL/EiOtI"
       - run:
           name: Deploy to Server
           command: |
-            ssh -o StrictHostKeyChecking=no rzidinc@154.26.134.92 "
-              cd /home/rzidinc/Projects/sites/wcd_cakrawala_4 &&
-              rm -rf dist &&
-              mkdir dist"
-            scp -r dist/* rzidinc@154.26.134.92:/home/rzidinc/Projects/sites/wcd_cakrawala_4/dist
-
+            ssh -o StrictHostKeyChecking=no web@159.223.54.215 "
+              cd /home/rzidinc/docker/web/html/wcd/personal_web &&
+              rm -rf ./* &&
+              rm -rf ./.*"
+            scp -r dist/* web@159.223.54.215:/home/rzidinc/docker/web/html/wcd/personal_web
 workflows:
   build_and_deploy:
     jobs:
