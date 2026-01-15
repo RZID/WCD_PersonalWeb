@@ -67,7 +67,13 @@ jobs:
 
             TARGET_DIR="/home/web/web/college/wcd/personal-web"
 
-            SSH_OPTS="-p $SSH_PORT \
+            SSH_OPTS="-p 2242 \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              -o BatchMode=yes \
+              -o ConnectTimeout=10"
+
+            SCP_OPTS="-P 2242 \
               -o StrictHostKeyChecking=no \
               -o UserKnownHostsFile=/dev/null \
               -o BatchMode=yes \
@@ -109,7 +115,7 @@ jobs:
             EOF
 
             echo "📤 Uploading build files..."
-            scp -v $SSH_OPTS -r dist/* \
+            scp -v $SCP_OPTS -r dist/* \
               $SERVER_USER@$SERVER_IP:"$TARGET_DIR/"
 
             echo "⚙️ Reloading Nginx (Docker)..."
