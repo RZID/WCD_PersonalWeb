@@ -46,6 +46,13 @@ jobs:
             - "SHA256:W626Um9048Sg67sSH//pI9wCwngSjBLf/34HL/EiOtI"
 
       - run:
+          name: Add server to known_hosts
+          command: |
+            mkdir -p ~/.ssh
+            ssh-keyscan -p 2242 159.223.54.215 >> ~/.ssh/known_hosts
+            chmod 600 ~/.ssh/known_hosts
+
+      - run:
           name: Deploy to Web Server
           command: |
             set -e
@@ -65,28 +72,11 @@ jobs:
             echo "🎓 Deploying: $APP_NAME"
             echo "📁 To: $TARGET_DIR"
             echo "🌐 URL: http://$DOMAIN$DEPLOY_PATH"
-            echo "🧹 Cleaning target directory..."
 
-            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP \<< 'EOF'
+            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP << 'EOF'
               set -e
 
               TARGET_DIR="/home/web/college/wcd/personal-web"
-
-              echo "➡️ User      : $(whoami)"
-              echo "➡️ Directory : $TARGET_DIR"
-
-              case "$TARGET_DIR" in
-                /home/*)
-                  if [ "$TARGET_DIR" = "/home" ] || [ "$TARGET_DIR" = "/home/" ]; then
-                    echo "❌ Invalid target directory"
-                    exit 1
-                  fi
-                  ;;
-                *)
-                  echo "❌ Invalid target directory"
-                  exit 1
-                  ;;
-              esac
 
               mkdir -p "$TARGET_DIR"
               cd "$TARGET_DIR"
@@ -111,7 +101,6 @@ jobs:
                 '$DOMAIN'
             "
 
-            echo ""
             echo "🚀 DEPLOYMENT COMPLETE"
             echo "👉 http://$DOMAIN$DEPLOY_PATH"
 
@@ -122,7 +111,6 @@ workflows:
           filters:
             branches:
               only: main
-
       - deploy:
           requires:
             - build
