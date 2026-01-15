@@ -46,50 +46,64 @@ jobs:
             - "SHA256:W626Um9048Sg67sSH//pI9wCwngSjBLf/34HL/EiOtI"
 
       - run:
-          name: Prepare SSH known_hosts
-          command: |
-            mkdir -p ~/.ssh
-            ssh-keyscan -p 2242 159.223.54.215 >> ~/.ssh/known_hosts
-            chmod 600 ~/.ssh/known_hosts
-
-      - run:
-          name: Deploy to College Nginx
+          name: Deploy to Web Server
           command: |
             set -e
 
-            APP_NAME="cu-disc03-uas"
-            DEPLOY_PATH="/disc03/uas"
+            APP_NAME="cu-wcd-personal-web"
+            DEPLOY_PATH="/wcd/personal-web"
             DOMAIN="college.rzidinc.com"
+
             SERVER_USER="web"
             SERVER_IP="159.223.54.215"
             SSH_PORT="2242"
 
-            TARGET_DIR="/home/$SERVER_USER/college/sites/$APP_NAME"
+            TARGET_DIR="/home/web/college/wcd/personal-web"
 
-            SSH_OPTS="-p $SSH_PORT"
+            SSH_OPTS="-p $SSH_PORT -o BatchMode=yes -o ConnectTimeout=10"
 
             echo "🎓 Deploying: $APP_NAME"
             echo "📁 To: $TARGET_DIR"
             echo "🌐 URL: http://$DOMAIN$DEPLOY_PATH"
-
             echo "🧹 Cleaning target directory..."
-            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "
-              if [[ \"$TARGET_DIR\" == /home/* ]] && [[ \"$TARGET_DIR\" != \"/home\" ]]; then
-                mkdir -p \"$TARGET_DIR\"
-                cd \"$TARGET_DIR\"
-                find . -mindepth 1 ! -name '.env' ! -name '.gitkeep' -exec rm -rf {} +
-                echo '✅ Directory cleaned'
-              else
-                echo '❌ Invalid target directory'
-                exit 1
-              fi
-            "
+
+            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP << 'EOF'
+              set -e
+
+              TARGET_DIR="/home/web/college/wcd/personal-web"
+
+              echo "➡️ User      : $(whoami)"
+              echo "➡️ Directory : $TARGET_DIR"
+
+              case "$TARGET_DIR" in
+                /home/*)
+                  if [ "$TARGET_DIR" = "/home" ] || [ "$TARGET_DIR" = "/home/" ]; then
+                    echo "❌ Invalid target directory"
+                    exit 1
+                  fi
+                  ;;
+                *)
+                  echo "❌ Invalid target directory"
+                  exit 1
+                  ;;
+              esac
+
+              mkdir -p "$TARGET_DIR"
+              cd "$TARGET_DIR"
+
+              find . -mindepth 1 \
+                ! -name '.env' \
+                ! -name '.gitkeep' \
+                -print -delete
+
+              echo "✅ Directory cleaned"
+            EOF
 
             echo "📤 Uploading build files..."
             scp $SSH_OPTS -r dist/* \
               $SERVER_USER@$SERVER_IP:"$TARGET_DIR/"
 
-            echo "⚙️ Configuring Nginx..."
+            echo "⚙️ Configuring Nginx (Docker)..."
             ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "
               docker exec nginx-college /deploy-script.sh \
                 '$APP_NAME' \
