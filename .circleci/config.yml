@@ -67,7 +67,12 @@ jobs:
 
             TARGET_DIR="/home/web/web/college/wcd/personal-web"
 
-            SSH_OPTS="-p $SSH_PORT -o BatchMode=yes -o ConnectTimeout=10"
+            SSH_OPTS="-p $SSH_PORT \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              -o BatchMode=yes \
+              -o ConnectTimeout=10"
+
 
             echo "🎓 Deploying: $APP_NAME"
             echo "📁 To: $TARGET_DIR"
