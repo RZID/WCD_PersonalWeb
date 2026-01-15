@@ -76,7 +76,7 @@ jobs:
             ssh $SSH_OPTS $SERVER_USER@$SERVER_IP \<< 'EOF'
               set -e
 
-              TARGET_DIR="/home/web/college/wcd/personal-web"
+              TARGET_DIR="/home/web/web/college/wcd/personal-web"
 
               mkdir -p "$TARGET_DIR"
               cd "$TARGET_DIR"
