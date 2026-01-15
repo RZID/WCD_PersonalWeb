@@ -65,7 +65,7 @@ jobs:
             SERVER_IP="159.223.54.215"
             SSH_PORT="2242"
 
-            TARGET_DIR="/home/web/college/wcd/personal-web"
+            TARGET_DIR="/home/web/web/college/wcd/personal-web"
 
             SSH_OPTS="-p $SSH_PORT -o BatchMode=yes -o ConnectTimeout=10"
 
