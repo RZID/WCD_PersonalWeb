@@ -120,7 +120,8 @@ jobs:
 
             echo "⚙️ Reloading Nginx (Docker)..."
             ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "
-              docker exec nginx-college /deploy-script.sh \
+              docker exec -it nginx-college sh -c "chmod +x /deploy-script.sh"
+              docker exec -it nginx-college sh -c "/deploy-script.sh" \
                 '$APP_NAME' \
                 '$DEPLOY_PATH' \
                 '$DOMAIN'
