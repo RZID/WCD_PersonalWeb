@@ -46,7 +46,7 @@ jobs:
             - "SHA256:W626Um9048Sg67sSH//pI9wCwngSjBLf/34HL/EiOtI"
 
       - run:
-          name: Add server to known_hosts
+          name: Prepare SSH known_hosts
           command: |
             mkdir -p ~/.ssh
             ssh-keyscan -p 2242 159.223.54.215 >> ~/.ssh/known_hosts
@@ -73,18 +73,32 @@ jobs:
             echo "📁 To: $TARGET_DIR"
             echo "🌐 URL: http://$DOMAIN$DEPLOY_PATH"
 
-            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP \<< 'EOF'
+            echo "🧹 Cleaning target directory..."
+
+            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP << 'EOF'
               set -e
 
               TARGET_DIR="/home/web/web/college/wcd/personal-web"
 
+              case "$TARGET_DIR" in
+                /home/*)
+                  [ "$TARGET_DIR" = "/home" ] && exit 1
+                  ;;
+                *)
+                  exit 1
+                  ;;
+              esac
+
               mkdir -p "$TARGET_DIR"
               cd "$TARGET_DIR"
 
-              find . -mindepth 1 \
-                ! -name '.env' \
-                ! -name '.gitkeep' \
-                -print -delete
+              for f in * .[^.]*; do
+                [ "$f" = "." ] && continue
+                [ "$f" = ".." ] && continue
+                [ "$f" = ".env" ] && continue
+                [ "$f" = ".gitkeep" ] && continue
+                rm -rf "$f"
+              done
 
               echo "✅ Directory cleaned"
             EOF
@@ -93,7 +107,7 @@ jobs:
             scp $SSH_OPTS -r dist/* \
               $SERVER_USER@$SERVER_IP:"$TARGET_DIR/"
 
-            echo "⚙️ Configuring Nginx (Docker)..."
+            echo "⚙️ Reloading Nginx (Docker)..."
             ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "
               docker exec nginx-college /deploy-script.sh \
                 '$APP_NAME' \
@@ -101,6 +115,7 @@ jobs:
                 '$DOMAIN'
             "
 
+            echo ""
             echo "🚀 DEPLOYMENT COMPLETE"
             echo "👉 http://$DOMAIN$DEPLOY_PATH"
 
@@ -111,6 +126,7 @@ workflows:
           filters:
             branches:
               only: main
+
       - deploy:
           requires:
             - build
