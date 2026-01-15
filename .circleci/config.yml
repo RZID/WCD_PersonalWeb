@@ -3,7 +3,7 @@ version: 2.1
 executors:
   node-executor:
     docker:
-      - image: cimg/node:22.14.0
+      - image: cimg/node:24.0
     working_directory: /home/circleci/project
 
 jobs:
@@ -23,6 +23,7 @@ jobs:
       - save_cache:
           key: v1-yarn-deps-{{ checksum "yarn.lock" }}
           paths:
+            - node_modules
             - ~/.cache/yarn
 
       - run:
@@ -43,9 +44,19 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "SHA256:W626Um9048Sg67sSH//pI9wCwngSjBLf/34HL/EiOtI"
+
+      - run:
+          name: Prepare SSH known_hosts
+          command: |
+            mkdir -p ~/.ssh
+            ssh-keyscan -p 2242 159.223.54.215 >> ~/.ssh/known_hosts
+            chmod 600 ~/.ssh/known_hosts
+
       - run:
           name: Deploy to College Nginx
           command: |
+            set -e
+
             APP_NAME="cu-disc03-uas"
             DEPLOY_PATH="/disc03/uas"
             DOMAIN="college.rzidinc.com"
@@ -53,34 +64,33 @@ jobs:
             SERVER_IP="159.223.54.215"
             SSH_PORT="2242"
 
-            # PATH
             TARGET_DIR="/home/$SERVER_USER/college/sites/$APP_NAME"
+
+            SSH_OPTS="-p $SSH_PORT"
 
             echo "🎓 Deploying: $APP_NAME"
             echo "📁 To: $TARGET_DIR"
-            echo "🌐 URL: http://$DOMAIN:8002$DEPLOY_PATH"
+            echo "🌐 URL: http://$DOMAIN$DEPLOY_PATH"
 
-            # 1. Clean directory
-            ssh -o StrictHostKeyChecking=no -p $SSH_PORT $SERVER_USER@$SERVER_IP "
-              # Safety check
-              if [[ \"$TARGET_DIR\" == \"/home\"* ]] && [[ \"$TARGET_DIR\" != \"/home\" ]] && [[ \"$TARGET_DIR\" != \"/home/\" ]]; then
+            echo "🧹 Cleaning target directory..."
+            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "
+              if [[ \"$TARGET_DIR\" == /home/* ]] && [[ \"$TARGET_DIR\" != \"/home\" ]]; then
                 mkdir -p \"$TARGET_DIR\"
-                cd \"$TARGET_DIR\" && rm -rf ./* ./.* 2>/dev/null || true
+                cd \"$TARGET_DIR\"
+                find . -mindepth 1 ! -name '.env' ! -name '.gitkeep' -exec rm -rf {} +
                 echo '✅ Directory cleaned'
               else
-                echo '❌ ERROR: Please check your target directory!'
+                echo '❌ Invalid target directory'
                 exit 1
               fi
             "
 
-            # 2. Upload build files
-            echo "📤 Uploading React build..."
-            scp -P $SSH_PORT -r /home/circleci/project/dist/* \
+            echo "📤 Uploading build files..."
+            scp $SSH_OPTS -r dist/* \
               $SERVER_USER@$SERVER_IP:"$TARGET_DIR/"
 
-            # 3. Configure nginx
             echo "⚙️ Configuring Nginx..."
-            ssh -p $SSH_PORT $SERVER_USER@$SERVER_IP "
+            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "
               docker exec nginx-college /deploy-script.sh \
                 '$APP_NAME' \
                 '$DEPLOY_PATH' \
@@ -88,8 +98,8 @@ jobs:
             "
 
             echo ""
-            echo "✅ DEPLOYMENT COMPLETE!"
-            echo "👉 http://$DOMAIN:8002$DEPLOY_PATH"
+            echo "🚀 DEPLOYMENT COMPLETE"
+            echo "👉 http://$DOMAIN$DEPLOY_PATH"
 
 workflows:
   build_and_deploy:
@@ -97,13 +107,11 @@ workflows:
       - build:
           filters:
             branches:
-              only:
-                - main
+              only: main
 
       - deploy:
           requires:
             - build
           filters:
             branches:
-              only:
-                - main
+              only: main
