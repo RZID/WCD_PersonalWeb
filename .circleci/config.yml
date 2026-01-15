@@ -42,7 +42,7 @@ jobs:
 
       - add_ssh_keys:
           fingerprints:
-            - "SHA256:F7kcxReB0Dsb6fZFSmhEN7rMgnoUpMLITuyS2iRMC7g"
+            - "SHA256:W626Um9048Sg67sSH//pI9wCwngSjBLf/34HL/EiOtI"
       - run:
           name: Deploy to College Nginx
           command: |
