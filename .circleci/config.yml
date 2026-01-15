@@ -61,7 +61,7 @@ jobs:
             echo "🌐 URL: http://$DOMAIN:8002$DEPLOY_PATH"
 
             # 1. Clean directory
-            ssh -p $SSH_PORT $SERVER_USER@$SERVER_IP "
+            ssh -o StrictHostKeyChecking=no -p $SSH_PORT $SERVER_USER@$SERVER_IP "
               # Safety check
               if [[ \"$TARGET_DIR\" == \"/home\"* ]] && [[ \"$TARGET_DIR\" != \"/home\" ]] && [[ \"$TARGET_DIR\" != \"/home/\" ]]; then
                 mkdir -p \"$TARGET_DIR\"
