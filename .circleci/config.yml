@@ -80,7 +80,7 @@ jobs:
 
             # 1. Clean target directory on remote server
             echo "🧹 Cleaning target directory..."
-            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP << 'CLEAN_EOF'
+            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP \<< 'CLEAN_EOF'
               set -e
               TARGET_DIR="/home/web/web/college/wcd/personal-web"
               
