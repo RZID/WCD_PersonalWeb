@@ -3,37 +3,32 @@ version: 2.1
 executors:
   node-executor:
     docker:
-      - image: cimg/node:24.0
-    working_directory: /home/circleci/project
+      - image: cimg/node:22.11.0
+    working_directory: ~/project
+
+commands:
+  setup_project:
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: yarn
+      - run:
+          name: Install dependencies
+          command: yarn install --frozen-lockfile
 
 jobs:
   build:
     executor: node-executor
     steps:
-      - checkout
-
-      - restore_cache:
-          keys:
-            - v1-yarn-deps-{{ checksum "yarn.lock" }}
-
-      - run:
-          name: Install dependencies
-          command: yarn install --frozen-lockfile
-
-      - save_cache:
-          key: v1-yarn-deps-{{ checksum "yarn.lock" }}
-          paths:
-            - node_modules
-            - ~/.cache/yarn
-
+      - setup_project
       - run:
           name: Build project
           command: yarn build
-
       - persist_to_workspace:
-          root: .
+          root: ~/project
           paths:
-            - dist
+            - dist/
+            - node_modules/
 
   deploy:
     executor: node-executor
@@ -49,7 +44,7 @@ jobs:
           name: Prepare SSH known_hosts
           command: |
             mkdir -p ~/.ssh
-            ssh-keyscan -p 2242 159.223.54.215 >> ~/.ssh/known_hosts
+            ssh-keyscan -p 2242 xxx.xxx.xxx.xxx >> ~/.ssh/known_hosts
             chmod 600 ~/.ssh/known_hosts
 
       - run:
@@ -57,45 +52,45 @@ jobs:
           command: |
             set -e
 
+            # Configuration
             APP_NAME="cu-wcd-personal-web"
             DEPLOY_PATH="/wcd/personal-web"
-            DOMAIN="college.rzidinc.com"
+            DOMAIN="xxx.xxx.com"
 
             SERVER_USER="web"
-            SERVER_IP="159.223.54.215"
+            SERVER_IP="xxx.xxx.xxx.xxx"
             SSH_PORT="2242"
-
             TARGET_DIR="/home/web/web/college/wcd/personal-web"
 
-            SSH_OPTS="-p 2242 \
+            SSH_OPTS="-p $SSH_PORT \
               -o StrictHostKeyChecking=no \
               -o UserKnownHostsFile=/dev/null \
               -o BatchMode=yes \
               -o ConnectTimeout=10"
 
-            SCP_OPTS="-P 2242 \
+            SCP_OPTS="-P $SSH_PORT \
               -o StrictHostKeyChecking=no \
               -o UserKnownHostsFile=/dev/null \
               -o BatchMode=yes \
               -o ConnectTimeout=10"
-
 
             echo "🎓 Deploying: $APP_NAME"
-            echo "📁 To: $TARGET_DIR"
+            echo "📁 Target: $TARGET_DIR"
             echo "🌐 URL: http://$DOMAIN$DEPLOY_PATH"
 
+            # 1. Clean target directory on remote server
             echo "🧹 Cleaning target directory..."
-
-            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP \<< 'EOF'
+            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP << 'CLEAN_EOF'
               set -e
-
               TARGET_DIR="/home/web/web/college/wcd/personal-web"
-
+              
+              # Safety check - prevent deleting important directories
               case "$TARGET_DIR" in
                 /home/*)
-                  [ "$TARGET_DIR" = "/home" ] && exit 1
+                  [ "$TARGET_DIR" = "/home" ] && { echo "Error: TARGET_DIR cannot be /home"; exit 1; }
                   ;;
                 *)
+                  echo "Error: TARGET_DIR must be under /home"
                   exit 1
                   ;;
               esac
@@ -103,6 +98,7 @@ jobs:
               mkdir -p "$TARGET_DIR"
               cd "$TARGET_DIR"
 
+              # Remove all files except .env and .gitkeep
               for f in * .[^.]*; do
                 [ "$f" = "." ] && continue
                 [ "$f" = ".." ] && continue
@@ -110,21 +106,16 @@ jobs:
                 [ "$f" = ".gitkeep" ] && continue
                 rm -rf "$f"
               done
-
               echo "✅ Directory cleaned"
-            EOF
+            CLEAN_EOF
 
+            # 2. Upload build files
             echo "📤 Uploading build files..."
-            scp -v $SCP_OPTS -r dist/* \
-              $SERVER_USER@$SERVER_IP:"$TARGET_DIR/"
+            scp $SCP_OPTS -r dist/* $SERVER_USER@$SERVER_IP:"$TARGET_DIR/"
 
+            # 3. Reload Nginx in Docker container
             echo "⚙️ Reloading Nginx (Docker)..."
-            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "
-              docker exec nginx-college sh /deploy-script.sh \
-                '$APP_NAME' \
-                '$DEPLOY_PATH' \
-                '$DOMAIN'
-            "
+            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "docker exec nginx-college sh -c 'chmod +x /deploy-script.sh && /deploy-script.sh \"$APP_NAME\" \"$DEPLOY_PATH\" \"$DOMAIN\"'"
 
             echo ""
             echo "🚀 DEPLOYMENT COMPLETE"
@@ -137,7 +128,6 @@ workflows:
           filters:
             branches:
               only: main
-
       - deploy:
           requires:
             - build
