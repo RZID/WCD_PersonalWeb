@@ -1,70 +1,54 @@
-version: 2.1
+deploy:
+  executor: node-executor
+  steps:
+    - attach_workspace:
+        at: /home/circleci/project
 
-executors:
-  node-executor:
-    docker:
-      - image: cimg/node:24.0
-    working_directory: /home/circleci/project
+    - add_ssh_keys:
+        fingerprints:
+          - "SHA256:W626Um9048Sg67sSH//pI9wCwngSjBLf/34HL/EiOtI"
 
-jobs:
-  build:
-    executor: node-executor
-    steps:
-      - checkout
+    - run:
+        name: Prepare SSH known_hosts
+        command: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p 2242 xxx.xxx.xxx.xxx >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
 
-      - restore_cache:
-          keys:
-            - v1-yarn-deps-{{ checksum "yarn.lock" }}
+    - run:
+        name: Deploy to Web Server
+        command: |
+          set -e
 
-      - run:
-          name: Install dependencies
-          command: yarn install --frozen-lockfile
+          APP_NAME="cu-wcd-personal-web"
+          DEPLOY_PATH="/wcd/personal-web"
+          DOMAIN="xxx.xxx.com"
 
-      - save_cache:
-          key: v1-yarn-deps-{{ checksum "yarn.lock" }}
-          paths:
-            - node_modules
-            - ~/.cache/yarn
+          SERVER_USER="web"
+          SERVER_IP="xxx.xxx.xxx.xxx"
+          SSH_PORT="2242"
 
-      - run:
-          name: Build project
-          command: yarn build
+          TARGET_DIR="/home/web/web/college/wcd/personal-web"
 
-      - persist_to_workspace:
-          root: .
-          paths:
-            - dist
+          SSH_OPTS="-p $SSH_PORT \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o BatchMode=yes \
+            -o ConnectTimeout=10"
 
-  deploy:
-    executor: node-executor
-    steps:
-      - attach_workspace:
-          at: /home/circleci/project
+          SCP_OPTS="-P $SSH_PORT \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o BatchMode=yes \
+            -o ConnectTimeout=10"
 
-      - add_ssh_keys:
-          fingerprints:
-            - "SHA256:W626Um9048Sg67sSH//pI9wCwngSjBLf/34HL/EiOtI"
+          echo "🎓 Deploying: $APP_NAME"
+          echo "📁 Target: $TARGET_DIR"
+          echo "🌐 URL: http://$DOMAIN$DEPLOY_PATH"
 
-      - run:
-          name: Prepare SSH known_hosts
-          command: |
-            mkdir -p ~/.ssh
-            ssh-keyscan -p 2242 159.223.54.215 >> ~/.ssh/known_hosts
-            chmod 600 ~/.ssh/known_hosts
-
-      - run:
-          name: Deploy to Web Server
-          command: |
+          echo "🧹 Cleaning target directory..."
+          ssh $SSH_OPTS $SERVER_USER@$SERVER_IP \<<'EOF'
             set -e
-
-            APP_NAME="cu-wcd-personal-web"
-            DEPLOY_PATH="/wcd/personal-web"
-            DOMAIN="college.rzidinc.com"
-
-            SERVER_USER="web"
-            SERVER_IP="159.223.54.215"
-            SSH_PORT="2242"
-
             TARGET_DIR="/home/web/web/college/wcd/personal-web"
 
             SSH_OPTS="-p 2242 \
