@@ -51,37 +51,81 @@ deploy:
             set -e
             TARGET_DIR="/home/web/web/college/wcd/personal-web"
 
-            case "$TARGET_DIR" in
-              /home/*) ;;
-              *) echo "Invalid target"; exit 1 ;;
-            esac
+            SSH_OPTS="-p 2242 \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              -o BatchMode=yes \
+              -o ConnectTimeout=10"
 
-            mkdir -p "$TARGET_DIR"
-            cd "$TARGET_DIR"
+            SCP_OPTS="-P 2242 \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              -o BatchMode=yes \
+              -o ConnectTimeout=10"
 
-            for f in * .[^.]*; do
-              [ "$f" = "." ] && continue
-              [ "$f" = ".." ] && continue
-              [ "$f" = ".env" ] && continue
-              [ "$f" = ".gitkeep" ] && continue
-              rm -rf "$f"
-            done
 
-            echo "✅ Directory cleaned"
-          EOF
+            echo "🎓 Deploying: $APP_NAME"
+            echo "📁 To: $TARGET_DIR"
+            echo "🌐 URL: http://$DOMAIN$DEPLOY_PATH"
 
-          echo "📤 Uploading build files..."
-          scp $SCP_OPTS -r dist/* \
-            $SERVER_USER@$SERVER_IP:"$TARGET_DIR/"
+            echo "🧹 Cleaning target directory..."
 
-          echo "⚙️ Running deploy script inside Docker..."
-          ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "
-            docker exec nginx-college sh /deploy-script.sh \
-              '$APP_NAME' \
-              '$DEPLOY_PATH' \
-              '$DOMAIN'
-          "
+            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP \<< 'EOF'
+              set -e
 
-          echo ""
-          echo "🚀 DEPLOYMENT COMPLETE"
-          echo "👉 http://$DOMAIN$DEPLOY_PATH"
+              TARGET_DIR="/home/web/web/college/wcd/personal-web"
+
+              case "$TARGET_DIR" in
+                /home/*)
+                  [ "$TARGET_DIR" = "/home" ] && exit 1
+                  ;;
+                *)
+                  exit 1
+                  ;;
+              esac
+
+              mkdir -p "$TARGET_DIR"
+              cd "$TARGET_DIR"
+
+              for f in * .[^.]*; do
+                [ "$f" = "." ] && continue
+                [ "$f" = ".." ] && continue
+                [ "$f" = ".env" ] && continue
+                [ "$f" = ".gitkeep" ] && continue
+                rm -rf "$f"
+              done
+
+              echo "✅ Directory cleaned"
+            EOF
+
+            echo "📤 Uploading build files..."
+            scp -v $SCP_OPTS -r dist/* \
+              $SERVER_USER@$SERVER_IP:"$TARGET_DIR/"
+
+            echo "⚙️ Reloading Nginx (Docker)..."
+            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "
+              docker exec nginx-college sh -c "chmod +x /deploy-script.sh"
+              docker exec nginx-college sh -c "/deploy-script.sh" \
+                '$APP_NAME' \
+                '$DEPLOY_PATH' \
+                '$DOMAIN'
+            "
+
+            echo ""
+            echo "🚀 DEPLOYMENT COMPLETE"
+            echo "👉 http://$DOMAIN$DEPLOY_PATH"
+
+workflows:
+  build_and_deploy:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: main
+
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: main
