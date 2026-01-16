@@ -3,32 +3,37 @@ version: 2.1
 executors:
   node-executor:
     docker:
-      - image: cimg/node:22.10.0
-    working_directory: ~/project
-
-commands:
-  setup_project:
-    steps:
-      - checkout
-      - node/install-packages:
-          pkg-manager: yarn
-      - run:
-          name: Install dependencies
-          command: yarn install --frozen-lockfile
+      - image: cimg/node:24.0
+    working_directory: /home/circleci/project
 
 jobs:
   build:
     executor: node-executor
     steps:
-      - setup_project
+      - checkout
+
+      - restore_cache:
+          keys:
+            - v1-yarn-deps-{{ checksum "yarn.lock" }}
+
+      - run:
+          name: Install dependencies
+          command: yarn install --frozen-lockfile
+
+      - save_cache:
+          key: v1-yarn-deps-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+            - ~/.cache/yarn
+
       - run:
           name: Build project
           command: yarn build
+
       - persist_to_workspace:
-          root: ~/project
+          root: .
           paths:
-            - dist/
-            - node_modules/
+            - dist
 
   deploy:
     executor: node-executor
@@ -52,7 +57,6 @@ jobs:
           command: |
             set -e
 
-            # Configuration
             APP_NAME="cu-wcd-personal-web"
             DEPLOY_PATH="/wcd/personal-web"
             DOMAIN="college.rzidinc.com"
@@ -60,6 +64,7 @@ jobs:
             SERVER_USER="web"
             SERVER_IP="159.223.54.215"
             SSH_PORT="2242"
+
             TARGET_DIR="/home/web/web/college/wcd/personal-web"
 
             SSH_OPTS="-p $SSH_PORT \
@@ -78,27 +83,19 @@ jobs:
             echo "📁 Target: $TARGET_DIR"
             echo "🌐 URL: http://$DOMAIN$DEPLOY_PATH"
 
-            # 1. Clean target directory on remote server
             echo "🧹 Cleaning target directory..."
-            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP << 'CLEAN_EOF'
+            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP <<'EOF'
               set -e
               TARGET_DIR="/home/web/web/college/wcd/personal-web"
-              
-              # Safety check - prevent deleting important directories
+
               case "$TARGET_DIR" in
-                /home/*)
-                  [ "$TARGET_DIR" = "/home" ] && { echo "Error: TARGET_DIR cannot be /home"; exit 1; }
-                  ;;
-                *)
-                  echo "Error: TARGET_DIR must be under /home"
-                  exit 1
-                  ;;
+                /home/*) ;;
+                *) echo "Invalid target dir"; exit 1 ;;
               esac
 
               mkdir -p "$TARGET_DIR"
               cd "$TARGET_DIR"
 
-              # Remove all files except .env and .gitkeep
               for f in * .[^.]*; do
                 [ "$f" = "." ] && continue
                 [ "$f" = ".." ] && continue
@@ -106,29 +103,35 @@ jobs:
                 [ "$f" = ".gitkeep" ] && continue
                 rm -rf "$f"
               done
+
               echo "✅ Directory cleaned"
-            CLEAN_EOF
+            EOF
 
-            # 2. Upload build files
             echo "📤 Uploading build files..."
-            scp $SCP_OPTS -r dist/* $SERVER_USER@$SERVER_IP:"$TARGET_DIR/"
+            scp $SCP_OPTS -r dist/* \
+              $SERVER_USER@$SERVER_IP:"$TARGET_DIR/"
 
-            # 3. Reload Nginx in Docker container
-            echo "⚙️ Reloading Nginx (Docker)..."
-            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "docker exec nginx-college sh -c 'chmod +x /deploy-script.sh && /deploy-script.sh \"$APP_NAME\" \"$DEPLOY_PATH\" \"$DOMAIN\"'"
+            echo "⚙️ Running deploy script inside Docker (Alpine-safe)..."
+            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "
+              docker exec nginx-college sh /deploy-script.sh \
+                '$APP_NAME' \
+                '$DEPLOY_PATH' \
+                '$DOMAIN'
+            "
 
             echo ""
             echo "🚀 DEPLOYMENT COMPLETE"
             echo "👉 http://$DOMAIN$DEPLOY_PATH"
 
+
 workflows:
-  version: 2
   build_and_deploy:
     jobs:
       - build:
           filters:
             branches:
               only: main
+
       - deploy:
           requires:
             - build
