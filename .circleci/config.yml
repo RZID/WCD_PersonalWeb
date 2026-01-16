@@ -84,7 +84,7 @@ jobs:
             echo "🌐 URL: http://$DOMAIN$DEPLOY_PATH"
 
             echo "🧹 Cleaning target directory..."
-            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP <<'EOF'
+            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP \<<'EOF'
               set -e
               TARGET_DIR="/home/web/web/college/wcd/personal-web"
 
