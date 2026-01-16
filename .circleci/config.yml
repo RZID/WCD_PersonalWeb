@@ -3,7 +3,7 @@ version: 2.1
 executors:
   node-executor:
     docker:
-      - image: cimg/node:22.11.0
+      - image: cimg/node:22.10.0
     working_directory: ~/project
 
 commands:
@@ -44,7 +44,7 @@ jobs:
           name: Prepare SSH known_hosts
           command: |
             mkdir -p ~/.ssh
-            ssh-keyscan -p 2242 xxx.xxx.xxx.xxx >> ~/.ssh/known_hosts
+            ssh-keyscan -p 2242 159.223.54.215 >> ~/.ssh/known_hosts
             chmod 600 ~/.ssh/known_hosts
 
       - run:
@@ -55,10 +55,10 @@ jobs:
             # Configuration
             APP_NAME="cu-wcd-personal-web"
             DEPLOY_PATH="/wcd/personal-web"
-            DOMAIN="xxx.xxx.com"
+            DOMAIN="college.rzidinc.com"
 
             SERVER_USER="web"
-            SERVER_IP="xxx.xxx.xxx.xxx"
+            SERVER_IP="159.223.54.215"
             SSH_PORT="2242"
             TARGET_DIR="/home/web/web/college/wcd/personal-web"
 
@@ -80,7 +80,7 @@ jobs:
 
             # 1. Clean target directory on remote server
             echo "🧹 Cleaning target directory..."
-            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP \<< 'CLEAN_EOF'
+            ssh $SSH_OPTS $SERVER_USER@$SERVER_IP << 'CLEAN_EOF'
               set -e
               TARGET_DIR="/home/web/web/college/wcd/personal-web"
               
@@ -122,6 +122,7 @@ jobs:
             echo "👉 http://$DOMAIN$DEPLOY_PATH"
 
 workflows:
+  version: 2
   build_and_deploy:
     jobs:
       - build:
