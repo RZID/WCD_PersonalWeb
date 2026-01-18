@@ -11,7 +11,7 @@ import ContactPage from "./pages/contact";
 
 const App = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.VITE_APP_BASE_PATH || "/"}>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/contact" element={<ContactPage />} />
