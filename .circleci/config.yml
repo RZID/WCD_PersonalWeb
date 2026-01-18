@@ -113,7 +113,7 @@ jobs:
 
             echo "⚙️ Running deploy script inside Docker (Alpine-safe)..."
             ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "
-              docker exec nginx-college sh /deploy-script.sh \
+              docker exec nginx-college sh /deploy-scripts/deploy-script-vite.sh \
                 '$APP_NAME' \
                 '$DEPLOY_PATH' \
                 '$DOMAIN'
